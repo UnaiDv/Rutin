@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Rutin - Organiza tu vida</title>
+    </head>
+    <body>
+        <h1>Mi rutina diaria</h1>
+        <form method="post" action="/create">
+            <input type="text" name="titulo" placeholder="Tarea nueva">
+            <button type="submit">Crear Tarea</button>
+        </form>
+
+        <ul>
+            {% for task in tasks %}
+            <li>{{ task }}</li>
+             {% endfor %}
+        </ul>
+
+    </body>
+</html>
