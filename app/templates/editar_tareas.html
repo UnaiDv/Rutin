@@ -1,0 +1,28 @@
+ <!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Rutin - Organiza tu vida</title>
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+    <body>
+        <h1> Rutin </h1>
+        <form method="post" action="/editar/{{ task.id }}">
+            <label for="titulo">Titulo:</label>
+            <input type="text" name="titulo" value = "{{ task.titulo }}" placeholder="El nuevo título que deseas cambiar" required>
+            <label for="descripcion">Descripción:</label>
+            <textarea name="descripcion" placeholder="Descripción de la tarea nueva (opcional)">{{ task.descripcion }}</textarea>
+            
+            <label for="prioridad">Qué prioridad tiene la nueva tarea?</label>
+            
+            <select name="prioridad">
+                <option value="alta" {% if task.prioridad == "alta" %}selected{% endif %}>Alta</option>
+                <option value="media" {% if task.prioridad == "media" %}selected{% endif %}>Media</option>
+                <option value="baja" {% if task.prioridad == "baja" %}selected{% endif %}>Baja</option>
+            </select>
+                 <button type="submit">Editar Tarea</button>
+            <a href="/"><button type="button">Cancelar</button></a>
+        </form>
+
+    </body>
+</html>
