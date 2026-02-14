@@ -1,19 +1,100 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8">
         <title>Rutin - Organiza tu vida</title>
+        <link rel="stylesheet" href="/static/styles.css">
     </head>
     <body>
-        <h1>Mi rutina diaria</h1>
+        <h1> Rutin </h1>
+        <div class="mensajes" id="mensaje-noti"> 
+            {% if mensaje %}
+                <div class="mensaje">{{ mensaje }}</div>
+            {% endif %}
+        </div>
+
+        <script>
+            const mensaje = document.getElementById("mensaje-noti")
+
+            if (mensaje){
+                setTimeout(() => {
+                    mensaje.classList.add("oculto");
+                    setTimeout(()=>{
+                        mensaje.remove();
+                    },500);
+                },2500);
+            }
+        </script>
+
+        <div class="filtros">
+            <form method="get" action="/">
+                <input type="text" name="buscar" placeholder="Buscar..." value="{{ buscar or '' }}">
+                
+                <select name="prioridad">
+                    <option value="">Todas las prioridades</option>
+                    <option value="alta" {% if filtro_prioridad == 'alta' %}selected{% endif %}>Alta</option>
+                    <option value="media" {% if filtro_prioridad == 'media' %}selected{% endif %}>Media</option>
+                    <option value="baja" {% if filtro_prioridad == 'baja' %}selected{% endif %}>Baja</option>
+                </select>
+                
+                <select name="estado">
+                    <option value="">Todos</option>
+                    <option value="pendientes" {% if filtro_estado == 'pendientes' %}selected{% endif %}>○ Pendientes</option>
+                    <option value="completadas" {% if filtro_estado == 'completadas' %}selected{% endif %}>✓ Completadas</option>
+                </select>
+                
+                <button type="submit">Filtrar</button>
+                <a href="/"><button type="button">Limpiar</button></a>
+            </form>
+        </div>
         <form method="post" action="/create">
-            <input type="text" name="titulo" placeholder="Tarea nueva">
+            <input type="text" name="titulo" placeholder="Tarea nueva" required>
+            <textarea name="descripcion" placeholder="Descripción de la tarea (opcional)"></textarea>
+            
+            <label for="prioridad">Qué prioridad tiene?</label>
+            
+            <select name="prioridad">
+                <option value="alta">Alta</option>
+                <option value="media">Media</option>
+                <option value="baja">Baja</option>
+            </select>
             <button type="submit">Crear Tarea</button>
         </form>
 
         <ul>
             {% for task in tasks %}
-            <li>{{ task }}</li>
+                <li class="{{ 'completed' if task.completada else '' }}">
+                    <strong>{{ task.titulo }}</strong>
+                        {% if task.descripcion %}
+                            <p>{{ task.descripcion }}</p>
+                        {% endif %}
+
+                        <span class="prioridad-insignia {{ task.prioridad }}">
+                            {% if task.prioridad == 'alta' %} Alta
+                            {% elif task.prioridad == 'media' %} Media
+                            {% else %} Baja
+                            {% endif %}
+                        </span>
+                        <small>Creada: {{ task.creada_en.strftime('%d/%m/%Y %H:%M') }} </small>
+
+                        <form method="post" action="/completar/{{ task.id }}" style="display: inline;">
+                            <button type="submit">
+                                {{ '✓ Completada' if task.completada else '○ Pendiente' }}
+                            </button>
+                        </form>
+
+                        <form method="post" action="/duplicar/{{ task.id }}" style="display: inline;">
+                            <button type="submit">Duplicar Tarea</button>
+                        </form>
+
+                        <form method="get" action="/editar/{{ task.id }}" style="display: inline;">
+                            <button type="submit">Editar Tarea</button>
+                        </form>
+
+                        <form method="post" action="/borrar/{{ task.id }}" style="display: inline;">
+                            <button type="submit">Borrar</button>
+                        </form>
+                </li> 
              {% endfor %}
         </ul>
 

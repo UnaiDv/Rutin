@@ -1,0 +1,175 @@
+/* static/styles.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #1E293B;
+}
+
+h1 {
+    color: #F2F4F7;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+input[type="text"],
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+ul {
+    list-style: none;
+}
+
+li {
+    background: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+li.completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+    background-color: #f0f0f0;
+}
+
+li strong {
+    display: block;
+    font-size: 18px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+li p {
+    color: #666;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+li small {
+    color: #999;
+    font-size: 12px;
+}
+
+li form {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+}
+
+li button {
+    padding: 5px 10px;
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+li form:last-child button {
+    background-color: #f44336;
+}
+
+li form:last-child button:hover {
+    background-color: #da190b;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+}
+
+strong.alta {
+    color: #d32f2f;
+}
+
+strong.media {
+    color: #f57c00;
+}
+
+strong.baja {
+    color: #388e3c;
+}
+
+.prioridad-insignia {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.prioridad-insignia.alta {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.prioridad-insignia.media {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.prioridad-insignia.baja {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.mensaje {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border-left: 4px solid #4CAF50;
+    margin-bottom: 20px;
+    transition: opacity 0.5s ease;
+}
+
+.mensaje.oculto {
+    opacity: 0;
+}
