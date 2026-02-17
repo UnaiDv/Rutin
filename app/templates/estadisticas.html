@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Rutin - Organiza tu vida</title>
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+    <body>
+        <h1> Rutin </h1>
+
+        <div class="cuadro">
+            <strong>Tareas Totales: </strong> <p>{{ total }}</p><br>
+            <strong>Tareas completadas: </strong> <p>{{ completadas }}</p><br>
+            <strong>Tareas pendientes: </strong> <p>{{ pendientes }}</p><br>
+            <strong>Porcentaje de completadas: </strong> <p>{{ porcentaje_completadas }}%</p><br>
+            <a href="/"><button type="button">⏎ Volver</button></a>
+        </div>
+        
+    </body>
+</html>

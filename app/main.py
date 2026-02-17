@@ -125,3 +125,13 @@ def duplicar_tarea(request: Request, task_id: int, db: Session = Depends(get_db)
     request.session["mensaje"] = "Tarea duplicada con éxito!"
 
     return RedirectResponse("/", status_code = 303)
+
+@app.get("/estadisticas")
+def estadisticas(request: Request, db: Session = Depends(get_db)):
+    total = db.query(Task).count()
+    completadas = db.query(Task).filter(Task.completada == True).count()
+    pendientes = db.query(Task).filter(Task.completada == False).count() 
+    porcentaje_completadas = completadas * 100 // total if total > 0 else 0
+
+    
+    return templates.TemplateResponse("estadisticas.html", {"request": request, "completadas": completadas, "pendientes": pendientes, "total": total, "porcentaje_completadas": porcentaje_completadas})
