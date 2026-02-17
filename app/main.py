@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
-from time import sleep
+from datetime import datetime
 
 from .database import SessionLocal, engine, Base
 from .models import Task
@@ -17,7 +17,6 @@ app = FastAPI(title="Rutin - Tu organizador de vida")
 templates = Jinja2Templates(directory="app/templates")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.add_middleware(SessionMiddleware, secret_key="clave1234 ")
-
 
 def get_db():
     db = SessionLocal()
@@ -55,8 +54,9 @@ def home(request: Request, buscar: str = None,
 
 
 @app.post("/create")
-def crear_tarea(request: Request, titulo: str = Form(...), descripcion: str=Form(""), prioridad: str=Form("media"), db: Session = Depends(get_db)):
-    nueva_tarea = Task(titulo=titulo, descripcion=descripcion, prioridad=prioridad)
+def crear_tarea(request: Request, titulo: str = Form(...), descripcion: str=Form(""), prioridad: str=Form("media"), fecha_limite: str=Form(None), db: Session = Depends(get_db)):
+    fecha = datetime.strptime(fecha_limite, "%Y-%m-%d") if fecha_limite else None
+    nueva_tarea = Task(titulo=titulo, descripcion=descripcion, prioridad=prioridad, fecha_limite=fecha)
     db.add(nueva_tarea)
     db.commit()
     db.refresh(nueva_tarea)
@@ -99,13 +99,14 @@ def editar_tarea(request: Request, task_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/editar/{task_id}")
-def editar_la_tarea(request: Request, task_id: int, titulo: str = Form(...), descripcion: str = Form(""), prioridad: str = Form("media"), db: Session = Depends(get_db)):
+def editar_la_tarea(request: Request, task_id: int, titulo: str = Form(...), descripcion: str = Form(""), prioridad: str = Form("media"), fecha_limite: str=Form(None), db: Session = Depends(get_db)):
     tarea = db.query(Task).filter(Task.id == task_id).first()
-
+    fecha = datetime.strptime(fecha_limite, "%Y-%m-%d") if fecha_limite else None
     if tarea:
         tarea.titulo = titulo
         tarea.descripcion = descripcion
         tarea.prioridad = prioridad
+        tarea.fecha_limite = fecha
         db.commit()
     
     request.session["mensaje"] = "Tarea editada con éxito!"

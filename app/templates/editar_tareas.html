@@ -20,6 +20,10 @@
                 <option value="media" {% if task.prioridad == "media" %}selected{% endif %}>Media</option>
                 <option value="baja" {% if task.prioridad == "baja" %}selected{% endif %}>Baja</option>
             </select>
+
+            <label for="fecha_limite">Desea poner una fecha limite?</label>
+            <input type="date" value="{{ task.fecha_limite.strftime('%Y-%m-%d') if task.fecha_limite else '' }}" name="fecha_limite">
+
                  <button type="submit">Editar Tarea</button>
             <a href="/"><button type="button">Cancelar</button></a>
         </form>
