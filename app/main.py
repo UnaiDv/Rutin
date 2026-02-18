@@ -8,7 +8,7 @@ from datetime import datetime
 
 from .database import SessionLocal, engine, Base
 from .models import Task, Categoria 
-from .schemas import TaskCreate, TaskResponse
+from .schemas import TaskCreate, TaskResponse, CategoryCreate, CategoryResponse
 
 Base.metadata.create_all(bind=engine)
 
@@ -191,13 +191,13 @@ def categorias_editar(request: Request, categoria_id: int, nombre: str = Form(..
 
     return RedirectResponse("/categorias", status_code = 303)
 
-# Listar las tareas
+# Listar las tareas api
 @app.get("/api/tareas", response_model=list[TaskResponse])
 def api_listar_tareas(db: Session = Depends(get_db)):
     tareas = db.query(Task).all()
     return tareas
 
-# añadir tareas
+# añadir tareas api
 @app.post("/api/tareas", response_model=TaskResponse, status_code=201)
 def api_crear_tareas(tarea: TaskCreate, db: Session = Depends(get_db)):
     nueva = Task(**tarea.dict())
@@ -206,7 +206,7 @@ def api_crear_tareas(tarea: TaskCreate, db: Session = Depends(get_db)):
     db.refresh(nueva)
     return nueva
 
-# listar una tarea
+# listar una tarea api
 @app.get("/api/tareas/{tarea_id}", response_model=TaskResponse)
 def api_obtener_tarea(tarea_id: int, db: Session = Depends(get_db)):
     tarea = db.query(Task).filter(Task.id == tarea_id).first()
@@ -216,7 +216,7 @@ def api_obtener_tarea(tarea_id: int, db: Session = Depends(get_db)):
     
     return tarea
 
-# editar una tarea
+# editar una tarea api
 @app.put("/api/tareas/{tarea_id}", response_model=TaskResponse)
 def api_editar_tarea(tarea_id: int, tarea_data = TaskCreate, db: Session = Depends(get_db)):
     tarea = db.query(Task).filter(Task.id == tarea_id).first()
@@ -232,7 +232,7 @@ def api_editar_tarea(tarea_id: int, tarea_data = TaskCreate, db: Session = Depen
 
     return tarea
 
-# borrar una tarea
+# borrar una tarea api
 @app.delete("/api/tareas/{tarea_id}", status_code=204)
 def api_borrar_tarea(tarea_id: int, db: Session = Depends(get_db)):
     tarea = db.query(Task).filter(Task.id == tarea_id).first()
@@ -242,5 +242,60 @@ def api_borrar_tarea(tarea_id: int, db: Session = Depends(get_db)):
     
     db.delete(tarea)
     db.commit()
+
+    return None
+
+# listar categorias api
+@app.get("/api/categorias", response_model=list[CategoryResponse])
+def api_listar_categorias(db: Session = Depends(get_db)):
+    categorias = db.query(Categoria).all()
+    return categorias
+
+#listar una categoria api
+@app.get("/api/categorias/{categoria_id}", response_model=CategoryResponse)
+def api_listar_una_categoria(categoria_id: int, db: Session = Depends(get_db)):
+    categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
+    if not categoria:
+        return HTTPException(status_code=404, detail="No se ha podido encontrar la categoria")
+    
+    return categoria
+
+# crear categorias api
+@app.post("/api/categorias", response_model=CategoryResponse)
+def api_crear_categorias(categoria: CategoryCreate, db: Session = Depends(get_db)):
+    nueva = Categoria(**categoria.dict())
+
+    db.add(nueva)
+    db.commit()
+    db.refresh(nueva)
+
+    return nueva
+
+# editar categorias api
+@app.put("/api/categorias/{categoria_id}", response_model=CategoryResponse)
+def api_editar_categorias(categoria_id: int, categoria_data = CategoryCreate, db: Session = Depends(get_db)):
+    categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
+
+    if not categoria:
+        return HTTPException(status_code=404, detail="No se ha podido encontrar la categoria")
+    
+    categoria.nombre = categoria_data
+    
+    db.commit()
+    db.refresh(categoria)
+
+    return categoria
+
+#borrar una categoria api
+@app.delete("/api/categorias/{categoria_id}", status_code=204)
+def api_borrar_categorias(categoria_id: int, db: Session = Depends(get_db)):
+    categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
+    tareas = db.query(Task).filter(Categoria.id == categoria_id).count()
+    if tareas > 0:
+        return HTTPException(status_code=400, detail="No se pueden borrar categorias con tareas asociadas")
+    if not categoria:
+        return HTTPException(status_code=404, detail="No se ha podido encontra la categoria")
+    
+    db.delete(categoria)
 
     return None
