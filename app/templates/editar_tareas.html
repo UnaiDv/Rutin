@@ -23,8 +23,18 @@
 
             <label for="fecha_limite">Desea poner una fecha limite?</label>
             <input type="date" value="{{ task.fecha_limite.strftime('%Y-%m-%d') if task.fecha_limite else '' }}" name="fecha_limite">
+            
+            {% if categorias %}
+                <label for="categoria_id">Qué categoria quiere asignarle a la tarea?</label>
+                <select name="categoria_id">
+                        <option value=""></option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                    {% endfor %}
+                </select>
+            {% endif %}
 
-                 <button type="submit">Editar Tarea</button>
+            <button type="submit">Editar Tarea</button>
             <a href="/"><button type="button">Cancelar</button></a>
         </form>
 

@@ -1,0 +1,71 @@
+ <!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Rutin - Organiza tu vida</title>
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+    <body>
+        <h1> Rutin </h1>
+        <div class="mensajes" id="mensaje-noti"> 
+            {% if mensaje_categoria %}
+                <div class="mensaje">{{ mensaje_categoria }}</div>
+            {% endif %}
+        </div>
+
+        <script>
+            const mensaje_categoria = document.getElementById("mensaje-noti")
+
+            if (mensaje){
+                setTimeout(() => {
+                    mensaje.classList.add("oculto");
+                    setTimeout(()=>{
+                        mensaje.remove();
+                    },500);
+                },2500);
+            }
+        </script>
+        <div class="mensajes" id="mensaje-noti"> 
+            {% if mensaje %}
+                <div class="mensaje">{{ mensaje }}</div>
+            {% endif %}
+        </div>
+
+        <script>
+            const mensaje = document.getElementById("mensaje-noti")
+
+            if (mensaje){
+                setTimeout(() => {
+                    mensaje.classList.add("oculto");
+                    setTimeout(()=>{
+                        mensaje.remove();
+                    },500);
+                },2500);
+            }
+        </script>
+
+        <form method="post" action="/categorias/crear">
+            <input type="text" name="nombre" placeholder="Categoria nueva" required>
+            <button type="submit">Crear Categoria</button>
+            <a href="/">
+                <button type="button">⏎ Volver</button>
+            </a>
+        </form>
+
+        <ul>
+            {% for categoria in categorias %}
+                <li>
+                    <strong>{{ categoria.nombre }}</strong>
+                        <form method="get" action="/categorias/editar/{{ categoria.id }}" style="display: inline;">
+                            <button type="submit">Editar Categoria</button>
+                        </form> 
+
+                        <form method="post" action="/categorias/borrar/{{ categoria.id }}" style="display: inline;">
+                            <button type="submit">Borrar</button>
+                        </form>
+                </li> 
+             {% endfor %}
+        </ul>
+
+    </body>
+</html>

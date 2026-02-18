@@ -7,7 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from datetime import datetime
 
 from .database import SessionLocal, engine, Base
-from .models import Task
+from .models import Task, Categoria 
 from .schemas import TaskCreate, TaskResponse
 
 Base.metadata.create_all(bind=engine)
@@ -32,7 +32,7 @@ def home(request: Request, buscar: str = None,
         db: Session = Depends(get_db)):
 
     mensaje = request.session.pop("mensaje", None)
-
+    categorias = db.query(Categoria).all()
     query = db.query(Task)
 
     if buscar:
@@ -49,14 +49,14 @@ def home(request: Request, buscar: str = None,
     tasks = query.all()
     
     return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, 
-                                    "buscar": buscar, "filtro_prioridad": prioridad, "filtro_completadas": estado, "mensaje": mensaje})
+                                    "buscar": buscar, "filtro_prioridad": prioridad, "filtro_completadas": estado, "mensaje": mensaje, "categorias": categorias})
 
 
 
 @app.post("/create")
-def crear_tarea(request: Request, titulo: str = Form(...), descripcion: str=Form(""), prioridad: str=Form("media"), fecha_limite: str=Form(None), db: Session = Depends(get_db)):
+def crear_tarea(request: Request, titulo: str = Form(...), descripcion: str=Form(""), prioridad: str=Form("media"), fecha_limite: str=Form(None), categoria_id: int = Form(None), db: Session = Depends(get_db)):
     fecha = datetime.strptime(fecha_limite, "%Y-%m-%d") if fecha_limite else None
-    nueva_tarea = Task(titulo=titulo, descripcion=descripcion, prioridad=prioridad, fecha_limite=fecha)
+    nueva_tarea = Task(titulo=titulo, descripcion=descripcion, prioridad=prioridad, fecha_limite=fecha, categoria_id=categoria_id)
     db.add(nueva_tarea)
     db.commit()
     db.refresh(nueva_tarea)
@@ -92,14 +92,15 @@ def completar_tarea(task_id: int, db: Session = Depends(get_db)):
 @app.get("/editar/{task_id}")
 def editar_tarea(request: Request, task_id: int, db: Session = Depends(get_db)):
     tarea = db.query(Task).filter(Task.id == task_id).first()
+    categorias = db.query(Categoria).all()
     if not tarea:
         return RedirectResponse("/", status_code=303)
 
-    return templates.TemplateResponse("editar_tareas.html", {"request": request, "task": tarea})
+    return templates.TemplateResponse("editar_tareas.html", {"request": request, "task": tarea, "categorias": categorias})
 
 
 @app.post("/editar/{task_id}")
-def editar_la_tarea(request: Request, task_id: int, titulo: str = Form(...), descripcion: str = Form(""), prioridad: str = Form("media"), fecha_limite: str=Form(None), db: Session = Depends(get_db)):
+def editar_la_tarea(request: Request, task_id: int, titulo: str = Form(...), descripcion: str = Form(""), prioridad: str = Form("media"), fecha_limite: str=Form(None), categoria_id: int=Form(None), db: Session = Depends(get_db)):
     tarea = db.query(Task).filter(Task.id == task_id).first()
     fecha = datetime.strptime(fecha_limite, "%Y-%m-%d") if fecha_limite else None
     if tarea:
@@ -107,6 +108,7 @@ def editar_la_tarea(request: Request, task_id: int, titulo: str = Form(...), des
         tarea.descripcion = descripcion
         tarea.prioridad = prioridad
         tarea.fecha_limite = fecha
+        tarea.categoria_id = categoria_id
         db.commit()
     
     request.session["mensaje"] = "Tarea editada con éxito!"
@@ -119,7 +121,7 @@ def duplicar_tarea(request: Request, task_id: int, db: Session = Depends(get_db)
     tarea = db.query(Task).filter(Task.id == task_id).first()
 
     if tarea:
-        tarea_duplicada = Task(titulo = "Copia de " + tarea.titulo, descripcion = tarea.descripcion, prioridad = tarea.prioridad)
+        tarea_duplicada = Task(titulo = "Copia de " + tarea.titulo, descripcion = tarea.descripcion, prioridad = tarea.prioridad, categoria_id = tarea.categoria_id)
         db.add(tarea_duplicada)
         db.commit()
     request.session["mensaje"] = "Tarea duplicada con éxito!"
@@ -135,3 +137,56 @@ def estadisticas(request: Request, db: Session = Depends(get_db)):
 
     
     return templates.TemplateResponse("estadisticas.html", {"request": request, "completadas": completadas, "pendientes": pendientes, "total": total, "porcentaje_completadas": porcentaje_completadas})
+
+@app.get("/categorias")
+def categorias_pagina(request: Request, db: Session = Depends(get_db)):
+    categorias = db.query(Categoria).all()
+    mensaje_categoria = request.session.pop("mensaje_categoria", None)
+
+    return templates.TemplateResponse("categorias.html", {"request": request, "categorias": categorias, "mensaje_categoria": mensaje_categoria})
+
+@app.post("/categorias/crear")
+def categorias_crear(request: Request, nombre: str = Form(...), db: Session = Depends(get_db)):
+    categoria_nueva = Categoria(nombre=nombre)
+    db.add(categoria_nueva)
+    db.commit()
+    db.refresh(categoria_nueva)
+
+    request.session["mensaje_categoria"] = "Categoria creada con éxito!"
+    
+    return RedirectResponse("/categorias", status_code = 303)
+
+@app.post("/categorias/borrar/{categoria_id}")
+def categorias_borrar(request: Request, categoria_id: int, db: Session = Depends(get_db)):
+    categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
+    
+    if not categoria:
+        return RedirectResponse("/categorias", status_code = 303)
+    
+    db.delete(categoria)
+    db.commit()
+
+    return RedirectResponse("/categorias", status_code = 303)
+
+@app.get("/categorias/editar/{categoria_id}")
+def categorias_editar(request: Request, categoria_id: int, db: Session = Depends(get_db)):
+    categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
+
+    if not categoria:
+        return RedirectResponse("/categorias", status_code = 303)
+
+    return templates.TemplateResponse("editar_categorias.html", {"request": request, "categoria": categoria})
+
+@app.post("/categorias/editar/{categoria_id}")
+def categorias_editar(request: Request, categoria_id: int, nombre: str = Form(...), db: Session = Depends(get_db)):
+    categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
+
+    if not categoria:
+        return RedirectResponse("/categorias", status_code = 303)
+
+    categoria.nombre = nombre
+    db.commit()
+
+    request.session["mensaje_categoria"] = "Categoria editada con éxito!!"
+
+    return RedirectResponse("/categorias", status_code = 303)

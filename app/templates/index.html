@@ -44,9 +44,16 @@
                 </select>
                 
                 <button type="submit">Filtrar</button>
-                <a href="/"><button type="button">Limpiar</button></a>
+                <a href="/">
+                    <button type="button">Limpiar</button>
+                </a>
+
                 <a href="/estadisticas">
                     <button type="button">Estadísticas de Tareas</button>
+                </a>
+
+                <a href="/categorias">
+                    <button type="button">Gestionar Categorias</button>
                 </a>
             </form>
 
@@ -65,6 +72,17 @@
                 <option value="media">Media</option>
                 <option value="baja">Baja</option>
             </select>
+
+            {% if categorias %}
+                <label for="categoria_id">Qué categoria quiere asignarle a la tarea?</label>
+                <select name="categoria_id">
+                        <option value=""></option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+
             <button type="submit">Crear Tarea</button>
         </form>
 
@@ -76,17 +94,24 @@
                             <p>{{ task.descripcion }}</p>
                         {% endif %}
 
-                        {% if task.fecha_limite %}
-                            {{ task.fecha_limite.strftime('%d/%m/%Y') }}
-                        {% endif %}
-
                         <span class="prioridad-insignia {{ task.prioridad }}">
                             {% if task.prioridad == 'alta' %} Alta
                             {% elif task.prioridad == 'media' %} Media
                             {% else %} Baja
                             {% endif %}
                         </span>
-                        <span class="fecha_limite">Creada: {{ task.creada_en.strftime('%d/%m/%Y %H:%M') }} </span>
+
+                        {% if task.categoria %}
+                            <span class="categoria-insignia">
+                                🗀 {{ task.categoria.nombre }}
+                            </span>
+                        {% endif %}
+
+                        <span class="fecha_limite">Creada: {{ task.creada_en.strftime('%d/%m/%Y') }} </span>
+                        
+                        {% if task.fecha_limite %}
+                            {{ task.fecha_limite.strftime('%d/%m/%Y') }}
+                        {% endif %}
 
                         <form method="post" action="/completar/{{ task.id }}" style="display: inline;">
                             <button type="submit">
