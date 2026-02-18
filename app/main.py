@@ -197,7 +197,7 @@ def api_listar_tareas(db: Session = Depends(get_db)):
     tareas = db.query(Task).all()
     return tareas
 
-# añadir tareas api
+# Añadir tareas api
 @app.post("/api/tareas", response_model=TaskResponse, status_code=201)
 def api_crear_tareas(tarea: TaskCreate, db: Session = Depends(get_db)):
     nueva = Task(**tarea.dict())
@@ -206,7 +206,7 @@ def api_crear_tareas(tarea: TaskCreate, db: Session = Depends(get_db)):
     db.refresh(nueva)
     return nueva
 
-# listar una tarea api
+# Listar una tarea api
 @app.get("/api/tareas/{tarea_id}", response_model=TaskResponse)
 def api_obtener_tarea(tarea_id: int, db: Session = Depends(get_db)):
     tarea = db.query(Task).filter(Task.id == tarea_id).first()
@@ -216,7 +216,7 @@ def api_obtener_tarea(tarea_id: int, db: Session = Depends(get_db)):
     
     return tarea
 
-# editar una tarea api
+# Editar una tarea api
 @app.put("/api/tareas/{tarea_id}", response_model=TaskResponse)
 def api_editar_tarea(tarea_id: int, tarea_data = TaskCreate, db: Session = Depends(get_db)):
     tarea = db.query(Task).filter(Task.id == tarea_id).first()
@@ -232,7 +232,7 @@ def api_editar_tarea(tarea_id: int, tarea_data = TaskCreate, db: Session = Depen
 
     return tarea
 
-# borrar una tarea api
+# Borrar una tarea api
 @app.delete("/api/tareas/{tarea_id}", status_code=204)
 def api_borrar_tarea(tarea_id: int, db: Session = Depends(get_db)):
     tarea = db.query(Task).filter(Task.id == tarea_id).first()
@@ -245,22 +245,45 @@ def api_borrar_tarea(tarea_id: int, db: Session = Depends(get_db)):
 
     return None
 
-# listar categorias api
+# Listar categorias api
 @app.get("/api/categorias", response_model=list[CategoryResponse])
 def api_listar_categorias(db: Session = Depends(get_db)):
     categorias = db.query(Categoria).all()
     return categorias
 
-#listar una categoria api
+# Estadisticas de todas las categorias api
+@app.get("/api/categorias/stats")
+def api_estadisticas_categorias(db: Session = Depends(get_db)):
+    categorias = db.query(Categoria).all()
+    resultado = []
+
+
+    for categoria in categorias:
+        total = db.query(Task).filter(Task.categoria_id == categoria.id).count()
+        completadas = db.query(Task).filter(Task.completada == True, Task.categoria_id == categoria.id).count()
+        pendientes = total - completadas
+
+        stats = {
+            "id": categoria.id,
+            "nombre": categoria.nombre,
+            "total": total,
+            "completadas": completadas,
+            "pendientes": pendientes
+        }
+
+        resultado.append(stats)
+    return resultado
+
+# Listar una categoria api
 @app.get("/api/categorias/{categoria_id}", response_model=CategoryResponse)
 def api_listar_una_categoria(categoria_id: int, db: Session = Depends(get_db)):
     categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
     if not categoria:
-        return HTTPException(status_code=404, detail="No se ha podido encontrar la categoria")
+        raise HTTPException(status_code=404, detail="No se ha podido encontrar la categoria")
     
     return categoria
 
-# crear categorias api
+# Crear categorias api
 @app.post("/api/categorias", response_model=CategoryResponse)
 def api_crear_categorias(categoria: CategoryCreate, db: Session = Depends(get_db)):
     nueva = Categoria(**categoria.dict())
@@ -271,31 +294,48 @@ def api_crear_categorias(categoria: CategoryCreate, db: Session = Depends(get_db
 
     return nueva
 
-# editar categorias api
+# Editar categorias api
 @app.put("/api/categorias/{categoria_id}", response_model=CategoryResponse)
-def api_editar_categorias(categoria_id: int, categoria_data = CategoryCreate, db: Session = Depends(get_db)):
+def api_editar_categorias(categoria_id: int, categoria_data: CategoryCreate, db: Session = Depends(get_db)):
     categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
 
     if not categoria:
-        return HTTPException(status_code=404, detail="No se ha podido encontrar la categoria")
+        raise HTTPException(status_code=404, detail="No se ha podido encontrar la categoria")
     
-    categoria.nombre = categoria_data
+    categoria.nombre = categoria_data.nombre
     
     db.commit()
     db.refresh(categoria)
 
     return categoria
 
-#borrar una categoria api
+# Borrar una categoria api
 @app.delete("/api/categorias/{categoria_id}", status_code=204)
 def api_borrar_categorias(categoria_id: int, db: Session = Depends(get_db)):
     categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
-    tareas = db.query(Task).filter(Categoria.id == categoria_id).count()
+    tareas = db.query(Task).filter(Task.categoria_id == categoria_id).count()
     if tareas > 0:
-        return HTTPException(status_code=400, detail="No se pueden borrar categorias con tareas asociadas")
+        raise HTTPException(status_code=400, detail="No se pueden borrar categorias con tareas asociadas")
     if not categoria:
-        return HTTPException(status_code=404, detail="No se ha podido encontra la categoria")
+        raise HTTPException(status_code=404, detail="No se ha podido encontra la categoria")
     
     db.delete(categoria)
+    db.commit()
+    return None 
 
-    return None
+# Estadisticas de una categorias api 
+@app.get("/api/categorias/{categoria_id}/stats/")
+def api_estadisticas_una_categoria(categoria_id: int, db: Session = Depends(get_db)):
+    categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
+
+    total = db.query(Task).filter(Task.categoria_id == categoria_id).count()
+    completadas = db.query(Task).filter(Task.completada == True, Task.categoria_id == categoria_id).count()
+    pendientes = db.query(Task).filter(Task.completada == False, Task.categoria_id == categoria_id).count()
+
+    return {
+        "categoria_id": categoria_id,
+        "nombre": categoria.nombre,
+        "total": total,
+        "completadas": completadas,
+        "pendientes": pendientes    
+    }
