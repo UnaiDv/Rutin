@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form, Depends
+from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.responses import RedirectResponse 
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -190,3 +190,57 @@ def categorias_editar(request: Request, categoria_id: int, nombre: str = Form(..
     request.session["mensaje_categoria"] = "Categoria editada con éxito!!"
 
     return RedirectResponse("/categorias", status_code = 303)
+
+# Listar las tareas
+@app.get("/api/tareas", response_model=list[TaskResponse])
+def api_listar_tareas(db: Session = Depends(get_db)):
+    tareas = db.query(Task).all()
+    return tareas
+
+# añadir tareas
+@app.post("/api/tareas", response_model=TaskResponse, status_code=201)
+def api_crear_tareas(tarea: TaskCreate, db: Session = Depends(get_db)):
+    nueva = Task(**tarea.dict())
+    db.add(nueva)
+    db.commit()
+    db.refresh(nueva)
+    return nueva
+
+# listar una tarea
+@app.get("/api/tareas/{tarea_id}", response_model=TaskResponse)
+def api_obtener_tarea(tarea_id: int, db: Session = Depends(get_db)):
+    tarea = db.query(Task).filter(Task.id == tarea_id).first()
+
+    if not tarea:
+        raise HTTPException(status_code=404, detail = "No se ha podido encontrar la tarea")
+    
+    return tarea
+
+# editar una tarea
+@app.put("/api/tareas/{tarea_id}", response_model=TaskResponse)
+def api_editar_tarea(tarea_id: int, tarea_data = TaskCreate, db: Session = Depends(get_db)):
+    tarea = db.query(Task).filter(Task.id == tarea_id).first()
+
+    if not tarea:
+        raise HTTPException(status_code=404, detail = "No se ha podido encontrar la tarea")
+
+    for key, value in tarea_data.dict().items():
+        setattr(tarea, key, value)
+    
+    db.commit()
+    db.refresh(tarea)
+
+    return tarea
+
+# borrar una tarea
+@app.delete("/api/tareas/{tarea_id}", status_code=204)
+def api_borrar_tarea(tarea_id: int, db: Session = Depends(get_db)):
+    tarea = db.query(Task).filter(Task.id == tarea_id).first()
+
+    if not tarea:
+        raise HTTPException(status_code=404, detail = "No se ha podido encontrar la tarea")
+    
+    db.delete(tarea)
+    db.commit()
+
+    return None
